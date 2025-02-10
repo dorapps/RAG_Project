@@ -28,7 +28,7 @@ from langchain.retrievers import ContextualCompressionRetriever
 from langchain.retrievers.document_compressors import CrossEncoderReranker
 from langchain_community.cross_encoders import HuggingFaceCrossEncoder
 
-
+groq_api_key=os.environ['GROQ_API_KEY']
 load_dotenv()
 
 def get_embeddings():
@@ -49,7 +49,9 @@ def get_db():
     
 def get_llm():
     #retriever = db.as_retriever(search_type="similarity", search_kwargs={"k": 10})
-    llm = Ollama(model="gemma2:2b", base_url="http://127.0.0.1:11434")
+    #llm = Ollama(model="gemma2:2b", base_url="http://127.0.0.1:11434")
+    llm=ChatGroq(groq_api_key=groq_api_key,
+    model_name="llama3-8b-8192")    
     return llm
 
 def get_selfQueryRetriever():
@@ -103,7 +105,7 @@ def get_selfQueryRetriever():
     return selfqueryRetriever
 
 def get_retriever():
-    retriever = get_db().as_retriever(search_type="similarity", search_kwargs={"k": 20})
+    retriever = get_db().as_retriever(search_type="similarity", search_kwargs={"k": 10})
     return retriever
     
     
