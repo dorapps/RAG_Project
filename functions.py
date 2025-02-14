@@ -41,10 +41,15 @@ def get_embeddings():
     return huggingface_embeddings
 
 def get_db():
-    # Use similarity searching algorithm and return 3 most relevant documents.
-    client = chromadb.PersistentClient('./db_subvenciones')
+    from langchain_postgres.vectorstores import PGVector
 
-    db = Chroma(client=client, collection_name="subvenciones",embedding_function=get_embeddings())
+    connection_string = "postgresql://postgres:postgres@localhost:5432/db_subvenciones"
+
+    db = PGVector(
+        collection_name="subvenciones",
+        connection=connection_string,
+        embeddings=get_embeddings(),
+    )
     return db
     
 def get_llm():
@@ -55,6 +60,8 @@ def get_llm():
     return llm
 
 def get_selfQueryRetriever():
+    from langchain.chains.query_constructor.base import AttributeInfo
+
     metadata_field_info = [
         AttributeInfo(
             name="Destinatarios",
@@ -89,23 +96,23 @@ def get_selfQueryRetriever():
             type="string"
         ),
         AttributeInfo(
-            name="Ambito Geografico", 
+            name="AmbitoGeografico", 
             description="Define en qué territorio (ciudad, comunidad o región), se concede la ayuda.", 
             type="string"
         )    
-    ]
-    
+        ]
+        
     selfqueryRetriever = SelfQueryRetriever.from_llm(
-    get_llm(),
-    get_db(),
-    "Subvenciones y ayudas",
-    metadata_field_info
-    )   
-    
+        get_llm(),
+        get_db(),
+        "Subvenciones y ayudas",
+        metadata_field_info
+        )   
+        
     return selfqueryRetriever
 
 def get_retriever():
-    retriever = get_db().as_retriever(search_type="similarity", search_kwargs={"k": 10})
+    retriever = get_db().as_retriever(search_type="similarity", search_kwargs={"k": 20})
     return retriever
     
     
