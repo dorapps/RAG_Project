@@ -80,9 +80,7 @@ def get_selfQueryRetriever():
         ),
         AttributeInfo(
             name="Sector", 
-            description="Sector al que se destina la convocatoria, puede ser uno de estos valores: "+
-            "[Turismo,Investigación y desarrollo,Artesano,Comercio,Agroalimentario,Industria,Cultura y comunicación,"+
-            "Agrario,Pesquero]", 
+            description="Sector al que se destina la convocatoria ", 
             type="string"
         ),
         AttributeInfo(
@@ -111,12 +109,14 @@ def get_selfQueryRetriever():
         
     return selfqueryRetriever
 
+    
 def get_retriever():
     retriever = get_db().as_retriever(search_type="similarity", search_kwargs={"k": 20})
     return retriever
     
     
 def get_mergeRetriever():    
+    print("get_mergeRetriever")
     mergeRetriever = MergerRetriever(retrievers=[get_selfQueryRetriever(), get_retriever()])
     return mergeRetriever
 
@@ -126,7 +126,7 @@ def get_compressionRetriever():
     compression_retriever = ContextualCompressionRetriever(
     base_compressor=compressor, base_retriever=get_mergeRetriever()
     )
-    
+    print("get_compressionRetriever")
     return compression_retriever
     
 def get_response(question):
