@@ -33,7 +33,7 @@ load_dotenv()
 
 def get_embeddings():
     huggingface_embeddings = HuggingFaceBgeEmbeddings(
-            model_name="jaimevera1107/all-MiniLM-L6-v2-similarity-es",
+            model_name="sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2",
             #model_name="jinaai/jina-embeddings-v2-base-es",
             model_kwargs={'device':'cpu', 'trust_remote_code': True}, 
             encode_kwargs={'normalize_embeddings': False, 'attn_implementation': "eager"},
@@ -54,10 +54,13 @@ def get_db():
     
 def get_llm():
     #retriever = db.as_retriever(search_type="similarity", search_kwargs={"k": 10})
-    #llm = Ollama(model="gemma2:2b", base_url="http://127.0.0.1:11434")
     llm=ChatGroq(groq_api_key=groq_api_key,
     model_name="llama3-8b-8192")    
     return llm
+
+def get_selfQueryLlm():
+    selfQueryllm = Ollama(model="gemma2:9b", base_url="http://127.0.0.1:11434")
+    return selfQueryllm
 
 def get_selfQueryRetriever():
     from langchain.chains.query_constructor.base import AttributeInfo
@@ -101,17 +104,19 @@ def get_selfQueryRetriever():
         ]
         
     selfqueryRetriever = SelfQueryRetriever.from_llm(
-        get_llm(),
+        get_selfQueryLlm(),
         get_db(),
         "Subvenciones y ayudas",
-        metadata_field_info
+        metadata_field_info,
+        search_kwargs={'k': 10}
         )   
-        
     return selfqueryRetriever
 
     
 def get_retriever():
-    retriever = get_db().as_retriever(search_type="similarity", search_kwargs={"k": 20})
+    retriever = get_db().as_retriever(search_type="similarity", search_kwargs={"k": 10})
+    docs = retriever.get_relevant_documents("vehículos eléctricos")
+    pprint.pp(docs)
     return retriever
     
     
@@ -120,8 +125,10 @@ def get_mergeRetriever():
     mergeRetriever = MergerRetriever(retrievers=[get_selfQueryRetriever(), get_retriever()])
     return mergeRetriever
 
+
 def get_compressionRetriever():
-    model = HuggingFaceCrossEncoder(model_name="BAAI/bge-reranker-v2-m3")
+    model = HuggingFaceCrossEncoder(model_name="mixedbread-ai/mxbai-rerank-xsmall-v1",
+                                    model_kwargs={'trust_remote_code': True})
     compressor = CrossEncoderReranker(model=model, top_n=5)
     compression_retriever = ContextualCompressionRetriever(
     base_compressor=compressor, base_retriever=get_mergeRetriever()
@@ -132,10 +139,13 @@ def get_compressionRetriever():
 def get_response(question):
     if question == "": return   
     qa_template = """Eres un asistente para responder a preguntas "
-        " basándote en los documentos proporcionados más abajo. "
+        " basándote en los documentos proporcionados. "
         "Debes reproducir exactamente el fragmento de texto donde viene la respuesta"
-        "Ordena todas las respuestas que encuentres en diferentes líneas,"
-        "Si algún documento no contiene la respuesta, ignóralo."
+        "Puede haber varias respuestas válidas así que lista todos los párrafos donde
+        "encuentres una respuesta,"
+        "Si algún documento no contiene la respuesta, ignóralo y no hagas ninguna
+        "mención en la respuesta.
+        "Considera \n como retorno de carro."
         "\n\n"
         "{context}"
 
