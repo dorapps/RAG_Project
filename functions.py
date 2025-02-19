@@ -58,10 +58,6 @@ def get_llm():
     model_name="llama3-8b-8192")    
     return llm
 
-def get_selfQueryLlm():
-    selfQueryllm = Ollama(model="gemma2:9b", base_url="http://127.0.0.1:11434")
-    return selfQueryllm
-
 def get_selfQueryRetriever():
     from langchain.chains.query_constructor.base import AttributeInfo
 
@@ -104,7 +100,7 @@ def get_selfQueryRetriever():
         ]
         
     selfqueryRetriever = SelfQueryRetriever.from_llm(
-        get_selfQueryLlm(),
+        get_llm(),
         get_db(),
         "Subvenciones y ayudas",
         metadata_field_info,
@@ -115,8 +111,8 @@ def get_selfQueryRetriever():
     
 def get_retriever():
     retriever = get_db().as_retriever(search_type="similarity", search_kwargs={"k": 10})
-    docs = retriever.get_relevant_documents("vehículos eléctricos")
-    pprint.pp(docs)
+    # docs = retriever.get_relevant_documents("vehículos eléctricos")
+    # pprint.pp(docs)
     return retriever
     
     

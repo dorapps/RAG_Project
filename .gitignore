@@ -1,3 +1,6 @@
 ayudas/
 data/
 db_subvenciones/
+allDocsList
+pgvector
+
