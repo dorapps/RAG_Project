@@ -27,18 +27,21 @@ from langchain.retrievers import MergerRetriever
 from langchain.retrievers import ContextualCompressionRetriever
 from langchain.retrievers.document_compressors import CrossEncoderReranker
 from langchain_community.cross_encoders import HuggingFaceCrossEncoder
+from langchain.embeddings import SentenceTransformerEmbeddings
 
 groq_api_key=os.environ['GROQ_API_KEY']
 load_dotenv()
 
 def get_embeddings():
-    huggingface_embeddings = HuggingFaceBgeEmbeddings(
-            model_name="sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2",
-            #model_name="jinaai/jina-embeddings-v2-base-es",
-            model_kwargs={'device':'cpu', 'trust_remote_code': True}, 
-            encode_kwargs={'normalize_embeddings': False, 'attn_implementation': "eager"},
-        )
-    return huggingface_embeddings
+    embeddings = SentenceTransformerEmbeddings(model_name="all-mpnet-base-v2",encode_kwargs = {'normalize_embeddings': False} ) 
+    return embeddings
+    # huggingface_embeddings = HuggingFaceBgeEmbeddings(
+    #         model_name="sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2",
+    #         #model_name="jinaai/jina-embeddings-v2-base-es",
+    #         model_kwargs={'device':'cpu', 'trust_remote_code': True}, 
+    #         encode_kwargs={'normalize_embeddings': False, 'attn_implementation': "eager"},
+    #     )
+    # return huggingface_embeddings
 
 def get_db():
     from langchain_postgres.vectorstores import PGVector
@@ -74,7 +77,12 @@ def get_selfQueryRetriever():
         ),
         AttributeInfo(
             name="Referencia",
-            description="Número de referencia y título de la convocatoria (breve descripción)",
+            description="Número de referencia de la convocatoria (breve descripción)",
+            type="string",
+        ),
+        AttributeInfo(
+            name="Título",
+            description="Título de la convocatoria (breve descripción)",
             type="string",
         ),
         AttributeInfo(
@@ -96,7 +104,23 @@ def get_selfQueryRetriever():
             name="AmbitoGeografico", 
             description="Define en qué territorio (ciudad, comunidad o región), se concede la ayuda.", 
             type="string"
-        )    
+        ),
+        AttributeInfo(
+            name="Información Adicional", 
+            description="Otra información relevante al documento.", 
+            type="string"
+        ),
+        AttributeInfo(
+            name="Referencias de la Publicación", 
+            description="Otros documentos relacionados con este documento.", 
+            type="string"
+        ),
+        AttributeInfo(
+            name="Plazo de solicitud", 
+            description="Plazo de solicitud de la ayuda, subvención o premio.", 
+            type="string"
+        ),
+        
         ]
         
     selfqueryRetriever = SelfQueryRetriever.from_llm(
@@ -110,6 +134,7 @@ def get_selfQueryRetriever():
 
     
 def get_retriever():
+    print("get_retriever")
     retriever = get_db().as_retriever(search_type="similarity", search_kwargs={"k": 10})
     # docs = retriever.get_relevant_documents("vehículos eléctricos")
     # pprint.pp(docs)
@@ -152,6 +177,7 @@ def get_response(question):
                                 input_variables=['context','question'])
     combine_custom_prompt='''
     Responde con todas las respuestas que encuentres en diferentes documentos.
+    Usando un formato de listado.
 
     Text:`{context}`
     '''
