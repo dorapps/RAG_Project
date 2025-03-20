@@ -128,14 +128,14 @@ def get_selfQueryRetriever():
         get_db(),
         "Subvenciones y ayudas",
         metadata_field_info,
-        search_kwargs={'k': 10}
+        search_kwargs={'k': 15}
         )   
     return selfqueryRetriever
 
     
 def get_retriever():
     print("get_retriever")
-    retriever = get_db().as_retriever(search_type="similarity", search_kwargs={"k": 10})
+    retriever = get_db().as_retriever(search_type="similarity", search_kwargs={"k": 15})
     # docs = retriever.get_relevant_documents("vehículos eléctricos")
     # pprint.pp(docs)
     return retriever
@@ -150,7 +150,7 @@ def get_mergeRetriever():
 def get_compressionRetriever():
     model = HuggingFaceCrossEncoder(model_name="mixedbread-ai/mxbai-rerank-xsmall-v1",
                                     model_kwargs={'trust_remote_code': True})
-    compressor = CrossEncoderReranker(model=model, top_n=5)
+    compressor = CrossEncoderReranker(model=model, top_n=10)
     compression_retriever = ContextualCompressionRetriever(
     base_compressor=compressor, base_retriever=get_mergeRetriever()
     )
@@ -161,7 +161,8 @@ def get_response(question):
     if question == "": return   
     qa_template = """Eres un asistente para responder a preguntas "
         " basándote en los documentos proporcionados. "
-        "Debes reproducir exactamente el fragmento de texto donde viene la respuesta"
+        "Debes reproducir exactamente el fragmento de texto donde viene la respuesta,
+        "y también hacer algún comentario a modo de resumen."
         "Puede haber varias respuestas válidas así que lista todos los párrafos donde
         "encuentres una respuesta,"
         "Si algún documento no contiene la respuesta, ignóralo y no hagas ninguna
@@ -176,7 +177,8 @@ def get_response(question):
     prompt = PromptTemplate(template=qa_template,
                                 input_variables=['context','question'])
     combine_custom_prompt='''
-    Responde con todas las respuestas que encuentres en diferentes documentos.
+    Responde con todas las respuestas que encuentres en diferentes documentos,
+    pero si la resupesta no se encuentra en uno de los documentos, no hagas ninguna mención.
     Usando un formato de listado.
 
     Text:`{context}`
