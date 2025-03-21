@@ -2,6 +2,7 @@ import chainlit as cl
 import requests
 import json
 import pprint
+import asyncio
 @cl.on_message
 async def main(message: cl.Message):
 
@@ -9,7 +10,9 @@ async def main(message: cl.Message):
     url="http://127.0.0.1:5000/question"
     myobj = {'question': message.content}
     try:
-        response = requests.post(url, json=myobj)
+        await cl.Message(content="Buscando la respuesta, puede tardar unos momentos...").send()  # Send a message to the user
+
+        response = await asyncio.to_thread(requests.post,url, json=myobj)
         response.raise_for_status() # Raise an exception for bad status codes (4xx or 5xx)
 
         # Check the content type to determine how to parse the response
