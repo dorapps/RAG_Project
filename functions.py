@@ -177,9 +177,9 @@ def get_response(question):
     prompt = PromptTemplate(template=qa_template,
                                 input_variables=['context','question'])
     combine_custom_prompt='''
-    Responde con todas las respuestas que encuentres en diferentes documentos,
-    pero si la resupesta no se encuentra en uno de los documentos, no hagas ninguna mención.
-    Usando un formato de listado.
+    Eres un asistente para ayudar a combinar las respuestas en los documentos encontrados.
+    Haz un amplio resumen de cada respuesta encontrada en cada dcoumento, separando los diferentes
+    documentos en formato de listado.
 
     Text:`{context}`
     '''
