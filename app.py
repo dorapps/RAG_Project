@@ -25,6 +25,9 @@ async def main(message: cl.Message):
                 await cl.Message(
                     content=data['respuesta'],    
                 ).send()
+                await cl.Message(
+                    content=data['metadatas'],    
+                ).send()
             except json.JSONDecodeError:
                 print("Response was not valid JSON.")
         else:
