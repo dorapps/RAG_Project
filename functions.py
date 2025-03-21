@@ -173,7 +173,7 @@ def get_response(question):
 
     Pregunta: {question}
     Respuesta:"""
-
+  
     prompt = PromptTemplate(template=qa_template,
                                 input_variables=['context','question'])
     combine_custom_prompt='''
@@ -211,3 +211,4 @@ def get_response(question):
 # question = """ ¿Qué subvenciones se dan en el Ayuntamiento de Basauri?   """  
 # result = get_response(question)
 # pprint.pp(result)
+
