@@ -4,17 +4,31 @@ from functions import get_response
 
 def extract_metadata_to_json(source_documents):
     """
-    Extrae los metadatos de una lista de objetos Document y los devuelve como un objeto JSON.
+    Extrae los metadatos de una lista de objetos Document y los devuelve como una lista de strings formateados.
 
     Args:
         source_documents (list): Una lista de objetos Document.
 
     Returns:
-        list: Una lista de diccionarios, donde cada diccionario contiene los metadatos de un documento.
+        list: Una lista de strings, donde cada string representa los metadatos formateados de un documento.
     """
     metadatos_lista = []
-    for doc in source_documents:
-        metadatos_lista.append(doc.metadata)  # Agrega el diccionario metadata a la lista.
+    for indice, doc in enumerate(source_documents):
+        metadata = doc.metadata
+        formato_metadatos = f"{indice + 1}. {metadata['Título']}:\n"
+        formato_metadatos += f"    - Ámbito Geográfico: {metadata['AmbitoGeografico']}\n"
+        formato_metadatos += f"    - Destinatarios: {metadata['Destinatarios']}\n"
+        formato_metadatos += f"    - Información Adicional: {metadata['Información Adicional']}\n"
+        formato_metadatos += f"    - Organismo: {metadata['Organismo']}\n"
+        formato_metadatos += f"    - Plazo de solicitud: {metadata['Plazo de solicitud']}\n"
+        formato_metadatos += f"    - Referencia: {metadata['Referencia']}\n"
+        formato_metadatos += f"    - Sector: {metadata['Sector']}\n"
+        formato_metadatos += f"    - Subsector: {metadata['Subsector']}\n"
+        formato_metadatos += f"    - Tipo: {metadata['Tipo']}\n"
+        formato_metadatos += f"    - Download URL: {metadata['download_url']}\n"
+        formato_metadatos += f"    - Página: {metadata['page']}\n"
+
+        metadatos_lista.append(formato_metadatos)
     return metadatos_lista
 
 def create_app():

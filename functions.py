@@ -159,15 +159,12 @@ def get_compressionRetriever():
     
 def get_response(question):
     if question == "": return   
-    qa_template = """Eres un asistente para responder a preguntas "
-        " basándote en los documentos proporcionados. "
-        "Debes reproducir exactamente el fragmento de texto donde viene la respuesta,
-        "y también hacer algún comentario a modo de resumen."
-        "Puede haber varias respuestas válidas así que lista todos los párrafos donde
-        "encuentres una respuesta,"
-        "Si algún documento no contiene la respuesta, ignóralo y no hagas ninguna
-        "mención en la respuesta.
-        "Considera \n como retorno de carro."
+    qa_template = """Eres un asistente para responder preguntas basándote en los documentos proporcionados.
+                    Proporciona la respuesta a la pregunta basándote en la información encontrada en los documentos. 
+                    Resume brevemente la información relevante para la respuesta.
+                    Si no encuentras la respuesta en los documentos, indica claramente que no se encontró la información.
+
+{context}
         "\n\n"
         "{context}"
 
@@ -177,9 +174,10 @@ def get_response(question):
     prompt = PromptTemplate(template=qa_template,
                                 input_variables=['context','question'])
     combine_custom_prompt='''
-    Eres un asistente para ayudar a combinar las respuestas en los documentos encontrados.
-    Haz un amplio resumen de cada respuesta encontrada en cada dcoumento, separando los diferentes
-    documentos en formato de listado.
+        Eres un asistente para combinar las respuestas encontradas en múltiples documentos.
+        Resume las respuestas encontradas en los documentos. 
+        Si un documento no contiene información relevante, omítelo del resumen.
+        Ordena la información de manera que sea clara y concisa.
 
     Text:`{context}`
     '''
@@ -189,7 +187,10 @@ def get_response(question):
         template=combine_custom_prompt, 
         input_variables=['context']
     )
-    qa_chain = RetrievalQA.from_chain_type(get_llm(), retriever=get_compressionRetriever(), chain_type="map_reduce",return_source_documents=True,
+    qa_chain = RetrievalQA.from_chain_type(get_llm(), 
+                                           retriever=get_compressionRetriever(), 
+                                           chain_type="map_reduce",
+                                           return_source_documents=True,
     chain_type_kwargs= {
             "verbose": False,
             "question_prompt": prompt,
@@ -207,6 +208,7 @@ def get_response(question):
 
     result=qa_chain.invoke(question)
     return result
+
     
 # question = """ ¿Qué subvenciones se dan en el Ayuntamiento de Basauri?   """  
 # result = get_response(question)
