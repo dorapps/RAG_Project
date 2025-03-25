@@ -25,11 +25,10 @@ async def main(message: cl.Message):
                 await cl.Message(
                     content=data['respuesta'],    
                 ).send()
-                await cl.Message(
-                    content=data['metadatas'],    
-                ).send()
+                for metadata_string in data['metadatas']:
+                    await cl.Message(content=metadata_string).send()
             except json.JSONDecodeError:
-                print("Response was not valid JSON.")
+                    print("Response was not valid JSON.")
         else:
             # Handle non-JSON responses (e.g., plain text)
             print("Text Response:")
