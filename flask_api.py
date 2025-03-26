@@ -5,6 +5,7 @@ from functions import get_response
 def extract_metadata_to_json(source_documents):
     """
     Extrae los metadatos de una lista de objetos Document y los devuelve como una lista de strings formateados.
+    Maneja documentos duplicados actualizando el campo 'page' en lugar de crear una nueva entrada.
 
     Args:
         source_documents (list): Una lista de objetos Document.
@@ -12,9 +13,22 @@ def extract_metadata_to_json(source_documents):
     Returns:
         list: Una lista de strings, donde cada string representa los metadatos formateados de un documento.
     """
-    metadatos_lista = []
-    for indice, doc in enumerate(source_documents):
+    metadatos_dict = {}  # Usamos un diccionario para manejar duplicados
+    for doc in source_documents:
         metadata = doc.metadata
+        clave = (metadata['Referencia'], metadata['download_url'])
+        if clave in metadatos_dict:
+            # Documento duplicado, actualizamos 'page'
+            if metadata['page'] not in metadatos_dict[clave]['page']:
+                metadatos_dict[clave]['page'].append(metadata['page'])
+        else:
+            # Nuevo documento
+            metadata['page'] = [metadata['page']]  # Convertimos 'page' en una lista
+            metadatos_dict[clave] = metadata
+
+    # Convertimos el diccionario a la lista de strings formateados
+    metadatos_lista = []
+    for indice, metadata in enumerate(metadatos_dict.values()):
         formato_metadatos = f"{indice + 1}. {metadata['Título']}:\n"
         formato_metadatos += f"    - Ámbito Geográfico: {metadata['AmbitoGeografico']}\n"
         formato_metadatos += f"    - Destinatarios: {metadata['Destinatarios']}\n"
@@ -26,9 +40,9 @@ def extract_metadata_to_json(source_documents):
         formato_metadatos += f"    - Subsector: {metadata['Subsector']}\n"
         formato_metadatos += f"    - Tipo: {metadata['Tipo']}\n"
         formato_metadatos += f"    - Download URL: {metadata['download_url']}\n"
-        formato_metadatos += f"    - Página: {metadata['page']}\n"
-
+        formato_metadatos += f"    - Páginas: {', '.join(map(str, metadata['page']))}\n" #se convierte la lista de paginas en un string
         metadatos_lista.append(formato_metadatos)
+
     return metadatos_lista
 
 def create_app():

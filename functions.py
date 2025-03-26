@@ -135,25 +135,29 @@ def get_selfQueryRetriever():
     
 def get_retriever():
     print("get_retriever")
-    retriever = get_db().as_retriever(search_type="similarity", search_kwargs={"k": 15})
-    # docs = retriever.get_relevant_documents("vehículos eléctricos")
-    # pprint.pp(docs)
+    retriever = get_db().as_retriever(    search_type="mmr",
+    search_kwargs={"k": 20, "lambda_mult": 0.0},)
     return retriever
     
     
 def get_mergeRetriever():    
     print("get_mergeRetriever")
     mergeRetriever = MergerRetriever(retrievers=[get_selfQueryRetriever(), get_retriever()])
+
     return mergeRetriever
 
 
 def get_compressionRetriever():
     model = HuggingFaceCrossEncoder(model_name="mixedbread-ai/mxbai-rerank-xsmall-v1",
                                     model_kwargs={'trust_remote_code': True})
-    compressor = CrossEncoderReranker(model=model, top_n=10)
+    compressor = CrossEncoderReranker(model=model)
     compression_retriever = ContextualCompressionRetriever(
-    base_compressor=compressor, base_retriever=get_mergeRetriever()
+    base_compressor=compressor, base_retriever=get_mergeRetriever(),
+    filter_by_score=True,  # Add this parameter
+        score_threshold=1.5
     )
+    # docs = retriever.get_relevant_documents("vehículos eléctricos")
+    # pprint.pp(docs)
     print("get_compressionRetriever")
     return compression_retriever
     
@@ -161,7 +165,8 @@ def get_response(question):
     if question == "": return   
     qa_template = """Eres un asistente para responder preguntas basándote en los documentos proporcionados.
                     Proporciona la respuesta a la pregunta basándote en la información encontrada en los documentos. 
-                    Resume brevemente la información relevante para la respuesta.
+                    Resume  la información relevante para la respuesta, haciendo un resumen de cada documento
+                    relevante por separado.
                     Si no encuentras la respuesta en los documentos, indica claramente que no se encontró la información.
 
 {context}
