@@ -1,18 +1,14 @@
 import chainlit as cl
-import requests
-import json
-import pprint
 import asyncio
-import random
-import re
-
+import json
+import requests
 
 async def typewriter_effect(message: str):
     """
-    Simula un efecto de máquina de escribir en Chainlit.
+    Simulates a typewriter effect in Chainlit.
 
     Args:
-        message (str): El mensaje a escribir.
+        message (str): The message to write.
 
     """
     msg = cl.Message(content="")
@@ -20,22 +16,21 @@ async def typewriter_effect(message: str):
     partial_message = ""
     for char in message:
         await cl.sleep(0.01)
-        partial_message = partial_message+char
+        partial_message += char
         msg.content = partial_message
         await msg.update()
-    
+
 @cl.on_message
 async def main(message: cl.Message):
-
-        # Send a response back to the user
-    url="http://127.0.0.1:5000/question"
+    # Send a response back to the user
+    url = "http://127.0.0.1:5000/question"
     myobj = {'question': message.content}
     try:
-        await typewriter_effect("Buscando la respuesta, puede tardar unos momentos...\n"
-                         "No cierre el navegador")  # Send a message to the user
+        await typewriter_effect("Searching for the answer, this may take a few moments...\n"
+                                "Do not close the browser")  # Send a message to the user
 
-        response = await asyncio.to_thread(requests.post,url, json=myobj)
-        response.raise_for_status() # Raise an exception for bad status codes (4xx or 5xx)
+        response = await asyncio.to_thread(requests.post, url, json=myobj)
+        response.raise_for_status()  # Raise an exception for bad status codes (4xx or 5xx)
 
         # Check the content type to determine how to parse the response
         content_type = response.headers.get("Content-Type")
@@ -45,17 +40,18 @@ async def main(message: cl.Message):
                 data = response.json()
 
                 await typewriter_effect(
-                      data['respuesta'],    
-                    )
+                    data['respuesta']
+                )
                 
                 await typewriter_effect(
-                        "A continuación se listan los documentos usados como fuente:",    
-                    )
+                    "The following documents were used as sources:"
+                )
                 for metadata_string in data['metadatas']:
-                                    await typewriter_effect(
-                                    metadata_string)
+                    await typewriter_effect(
+                        metadata_string
+                    )
             except json.JSONDecodeError:
-                    print("Response was not valid JSON.")
+                print("Response was not valid JSON.")
         else:
             # Handle non-JSON responses (e.g., plain text)
             print("Text Response:")
