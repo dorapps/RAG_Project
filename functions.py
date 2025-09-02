@@ -1,27 +1,9 @@
 import os
-import pprint
 
 from langchain_groq import ChatGroq
-from langchain_community.document_loaders import WebBaseLoader
-from langchain.embeddings import OllamaEmbeddings
-from langchain.text_splitter import RecursiveCharacterTextSplitter
-from langchain.chains.combine_documents import create_stuff_documents_chain
-from langchain_core.prompts import ChatPromptTemplate
-from langchain_community.document_loaders import PyPDFDirectoryLoader
-from langchain.chains import create_retrieval_chain
-from langchain_community.vectorstores import FAISS
-import time
-import numpy as np
 from dotenv import load_dotenv
-from langchain_community.vectorstores import Chroma
 from langchain.prompts import PromptTemplate
 from langchain.chains import RetrievalQA
-from langchain_community.embeddings import HuggingFaceBgeEmbeddings
-import chromadb
-from chromadb.utils import embedding_functions
-from langchain_community.llms import Ollama
-from langchain.chains.query_constructor.base import AttributeInfo
-from langchain.chains.query_constructor.base import AttributeInfo
 from langchain.retrievers.self_query.base import SelfQueryRetriever
 from langchain.retrievers import MergerRetriever
 from langchain.retrievers import ContextualCompressionRetriever
@@ -35,13 +17,6 @@ load_dotenv()
 def get_embeddings():
     embeddings = SentenceTransformerEmbeddings(model_name="all-mpnet-base-v2",encode_kwargs = {'normalize_embeddings': False} ) 
     return embeddings
-    # huggingface_embeddings = HuggingFaceBgeEmbeddings(
-    #         model_name="sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2",
-    #         #model_name="jinaai/jina-embeddings-v2-base-es",
-    #         model_kwargs={'device':'cpu', 'trust_remote_code': True}, 
-    #         encode_kwargs={'normalize_embeddings': False, 'attn_implementation': "eager"},
-    #     )
-    # return huggingface_embeddings
 
 def get_db():
     from langchain_postgres.vectorstores import PGVector
@@ -163,13 +138,10 @@ def get_compressionRetriever():
     
 def get_response(question):
     if question == "": return   
-    qa_template = """Eres un asistente para responder preguntas basándote en los documentos proporcionados.
-                    Proporciona la respuesta a la pregunta basándote en la información encontrada en los documentos. 
-                    Resume  la información relevante para la respuesta, haciendo un resumen de cada documento
-                    relevante por separado.
-                    Si no encuentras la respuesta en los documentos, indica claramente que no se encontró la información.
+    qa_template = """Eres un asistente para responder preguntas basándote en el documento proporcionado.
+                    Reproduce exactamente todo el documento donde viene la respuesta.
 
-{context}
+        {context}
         "\n\n"
         "{context}"
 
@@ -179,9 +151,10 @@ def get_response(question):
     prompt = PromptTemplate(template=qa_template,
                                 input_variables=['context','question'])
     combine_custom_prompt='''
-        Eres un asistente para combinar las respuestas encontradas en múltiples documentos.
-        Resume las respuestas encontradas en los documentos. 
-        Si un documento no contiene información relevante, omítelo del resumen.
+        Eres un asistente para combinar las respuestas encontradas en el documento.
+        Resume  la información relevante para la respuesta, haciendo un resumen, por separado,de cada documento
+        relevante, en formato de lista.
+        Si un documento no contiene información relevante, omítelo.
         Ordena la información de manera que sea clara y concisa.
 
     Text:`{context}`
@@ -208,14 +181,9 @@ def get_response(question):
                                             return_source_documents=True) """
 
 
-    #query = """ ¿Quiénes son los beneficiarios de la referencia 71572 ?   """  
-    #question = query
 
     result=qa_chain.invoke(question)
     return result
 
-    
-# question = """ ¿Qué subvenciones se dan en el Ayuntamiento de Basauri?   """  
-# result = get_response(question)
-# pprint.pp(result)
+
 
